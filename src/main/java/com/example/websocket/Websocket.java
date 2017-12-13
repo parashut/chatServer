@@ -28,9 +28,18 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
     protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
         System.out.println("Wiadomość przychodząca: " + new String(message.getPayload().array()));
 
-        for (User user : sessions.values()) {
-            user.getSession().sendMessage(message);
+        User userSending = sessions.get(session.getId());
+        String messageConverted = new String(message.getPayload().array());
+
+        if (userSending.getNick().isEmpty()) {
+            userSending.setNick(messageConverted);
+            userSending.getSession().sendMessage(new BinaryMessage(("Twój nick to: " + messageConverted).getBytes()));
+        } else {
+            for (User user : sessions.values()) {
+                user.getSession().sendMessage(new BinaryMessage((userSending.getNick() + ": " + messageConverted).getBytes()));
+            }
         }
+
     }
 
     @Override

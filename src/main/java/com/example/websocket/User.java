@@ -9,6 +9,7 @@ public class User {
 
     public User(WebSocketSession session) {
         this.session = session;
+        this.nick = "";
     }
 
     public WebSocketSession getSession() {
