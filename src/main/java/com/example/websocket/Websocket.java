@@ -17,7 +17,7 @@ import java.util.Map;
 @EnableWebSocket
 public class Websocket extends BinaryWebSocketHandler implements WebSocketConfigurer {
 
-    private Map<String, WebSocketSession> sessions = Collections.synchronizedMap(new HashMap<String, WebSocketSession>());
+    private Map<String, User> sessions = Collections.synchronizedMap(new HashMap<String, User>());
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry webSocketHandlerRegistry) {
@@ -28,14 +28,16 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
     protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
         System.out.println("Wiadomość przychodząca: " + new String(message.getPayload().array()));
 
-        for (WebSocketSession userSesion : sessions.values()) {
-            userSesion.sendMessage(message);
+        for (User user : sessions.values()) {
+            user.getSession().sendMessage(message);
         }
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        sessions.put(session.getId(), session);
+        sessions.put(session.getId(), new User(session));
+        session.sendMessage(new BinaryMessage("Podaj swój nick".getBytes()));
+
         System.out.println("Nowy użytkownik zarejestrowany");
     }
 
