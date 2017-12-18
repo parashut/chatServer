@@ -9,15 +9,15 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Configuration //zeby klasa zamienila sie w beana
 @EnableWebSocket
 public class Websocket extends BinaryWebSocketHandler implements WebSocketConfigurer {
 
     private Map<String, User> sessions = Collections.synchronizedMap(new HashMap<String, User>());
+
+    private List<String> badWords = Arrays.asList("dupa", "gówno");
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry webSocketHandlerRegistry) {
@@ -29,7 +29,7 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
         System.out.println("Wiadomość przychodząca: " + new String(message.getPayload().array()));
 
         User userSending = sessions.get(session.getId());
-        String messageConverted = new String(message.getPayload().array());
+        String messageConverted = censure(new String(message.getPayload().array()));
 
         if (userSending.getNick().isEmpty()) {
             userSending.setNick(messageConverted);
@@ -39,7 +39,16 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
                 user.getSession().sendMessage(new BinaryMessage((userSending.getNick() + ": " + messageConverted).getBytes()));
             }
         }
+    }
 
+    private String censure(String message){
+        String changedMessage = message;
+        for (String word : badWords){
+            if (message.contains(word)){
+                changedMessage = "Jestem głupi";
+            }
+        }
+        return changedMessage;
     }
 
     @Override
