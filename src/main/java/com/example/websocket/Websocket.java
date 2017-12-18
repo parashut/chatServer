@@ -9,6 +9,7 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
+import java.io.IOException;
 import java.util.*;
 
 @Configuration //zeby klasa zamienila sie w beana
@@ -17,7 +18,8 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
 
     private Map<String, User> sessions = Collections.synchronizedMap(new HashMap<String, User>());
 
-    private List<String> badWords = Arrays.asList("dupa", "gówno");
+    private List<String> badWords = Collections.synchronizedList(
+            new ArrayList<>(Arrays.asList("dupa", "gówno")));
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry webSocketHandlerRegistry) {
@@ -31,12 +33,46 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
         User userSending = sessions.get(session.getId());
         String messageConverted = censure(new String(message.getPayload().array()));
 
+        if (messageConverted.contains("/")){
+            String[] command = messageConverted.split(" ");
+            switch (command[0].substring(1, command[0].length())){
+                case "addword": {
+                    badWords.add(command[1]);
+                    userSending.getSession().sendMessage(new BinaryMessage("Dodałeś nowe słowo".getBytes()));
+                    break;
+                }
+                case "changenick": {
+                    userSending.setNick(command[1]);
+                    break;
+                }
+                case "kick": {
+                    kickUser(command[1]);
+                }
+                default: {
+                    userSending.getSession().sendMessage(new BinaryMessage("Brak polecenia".getBytes()));
+                }
+            }
+            return;
+        }
+
         if (userSending.getNick().isEmpty()) {
             userSending.setNick(messageConverted);
             userSending.getSession().sendMessage(new BinaryMessage(("Twój nick to: " + messageConverted).getBytes()));
         } else {
             for (User user : sessions.values()) {
                 user.getSession().sendMessage(new BinaryMessage((userSending.getNick() + ": " + messageConverted).getBytes()));
+            }
+        }
+    }
+
+    private void kickUser(String nick){
+        for (User user : sessions.values()){
+            if (user.getNick().equals(nick)){
+                try {
+                    user.getSession().close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
