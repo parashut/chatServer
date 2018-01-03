@@ -38,7 +38,7 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
             switch (command[0].substring(1, command[0].length())){
                 case "addword": {
                     badWords.add(command[1]);
-                    userSending.getSession().sendMessage(new BinaryMessage("Dodałeś nowe słowo".getBytes()));
+                    userSending.getSession().sendMessage(new BinaryMessage("Dodałeś nowe słowo".getBytes("UTF-8")));
                     break;
                 }
                 case "changenick": {
@@ -49,7 +49,7 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
                     kickUser(command[1]);
                 }
                 default: {
-                    userSending.getSession().sendMessage(new BinaryMessage("Brak polecenia".getBytes()));
+                    userSending.getSession().sendMessage(new BinaryMessage("Brak polecenia".getBytes("UTF-8")));
                 }
             }
             return;
@@ -57,10 +57,10 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
 
         if (userSending.getNick().isEmpty()) {
             userSending.setNick(messageConverted);
-            userSending.getSession().sendMessage(new BinaryMessage(("Twój nick to: " + messageConverted).getBytes()));
+            userSending.getSession().sendMessage(new BinaryMessage(("Twój nick to: " + messageConverted).getBytes("UTF-8")));
         } else {
             for (User user : sessions.values()) {
-                user.getSession().sendMessage(new BinaryMessage((userSending.getNick() + ": " + messageConverted).getBytes()));
+                user.getSession().sendMessage(new BinaryMessage((userSending.getNick() + ": " + messageConverted).getBytes("UTF-8")));
             }
         }
     }
@@ -90,7 +90,7 @@ public class Websocket extends BinaryWebSocketHandler implements WebSocketConfig
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         sessions.put(session.getId(), new User(session));
-        session.sendMessage(new BinaryMessage("Podaj swój nick".getBytes()));
+        session.sendMessage(new BinaryMessage("Podaj swój nick".getBytes("UTF-8")));
 
         System.out.println("Nowy użytkownik zarejestrowany");
     }
